@@ -1,5 +1,7 @@
 #include "encode.h"
 
+#define CHSET_SIZE 255
+
 int main(int argc, char *argv[]) {
 	tree *head = make_tree(1, EOF);
 
@@ -8,15 +10,15 @@ int main(int argc, char *argv[]) {
 		printf("Error: %s\n", strerror(errno));
 		return 1;
 	}
-	int weights[255];
-	for(int i=0; i<255; i++) {
+	int weights[CHSET_SIZE];
+	for(int i=0; i<CHSET_SIZE; i++) {
 		weights[i] = 0;
 	}
 	int c;
 	while((c=fgetc(file)) != EOF) {
 		weights[c]++;
 	}
-	for(int i=0; i<255; i++) {
+	for(int i=0; i<CHSET_SIZE; i++) {
 		if(weights[i]) {
 			insert(make_tree(weights[i], i), head);
 		}
@@ -26,21 +28,62 @@ int main(int argc, char *argv[]) {
 	// print_in(head, code, 0);
 	rewind(file);
 
-	int total = 0;
-	char* string;
-	while((c=fgetc(file)) != EOF) {
-		string = search(head, c);
-		total += strlen(string);
-		free(string);
-	}
-	string = search(head, c);
-	total += strlen(string);
-	free(string);
-	printf("Total size without encoding: %d bytes\n", head->weight*sizeof(char));
-	printf("Total size with encoding: %d bytes\n", total/8);
+	print_encoded(file, head);
+
+	// int total = 0;
+	// char* string;
+	// while((c=fgetc(file)) != EOF) {
+	// 	string = search(head, c);
+	// 	total += strlen(string);
+	// 	free(string);
+	// }
+	// string = search(head, c);
+	// total += strlen(string);
+	// free(string);
+
+	// printf("Total size without encoding: %d bytes\n", head->weight*sizeof(char));
+	// printf("Total size with encoding: %d bytes\n", total/8);
+
+
 
 	fclose(file);
 	clean(head);
+}
+
+// void print_pre(tree *head) {
+
+// }
+
+void print_encoded(FILE *file, tree *head) {
+	char *character;
+	int c;
+	int index = 0;
+	int value = 0;
+	while((c=fgetc(file)) != EOF) {
+		character = search(head, c);
+		for( ; *character; character++) {
+			value = print_bits(index, *character - '0', value);
+			if(index == 7) {
+				index = 0;
+			}
+			else {
+				index++;
+			}
+		}
+	}
+}
+
+
+
+int print_bits(int index, int bit, int value) {
+	value = value | bit<<(CHAR_BIT - index - 1);
+	if(index == 7) {
+		printf("%c", value);
+		return 0;
+	}
+	else {
+		return value;
+	}
 }
 
 /* Search the huffman tree for the symbol, returning its bitstring if found or an empty string if not found. Be sure to free after use. */

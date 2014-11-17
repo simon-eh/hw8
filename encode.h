@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <limits.h>
 
 
 typedef struct tree {
@@ -21,3 +22,5 @@ void print_in(tree*,char[],int);
 void clean(tree*);
 char* search(tree*,int);
 int r_search(tree*,int,char**,int);
+void print_encoded(FILE*,tree*);
+int print_bits(int,int,int);
