@@ -71,6 +71,9 @@ void print_encoded(FILE *file, tree *head) {
 			}
 		}
 	}
+	while(index > 0 && index < 8) {
+	    print_bits(index++, 0, value);
+	}
 }
 
 
