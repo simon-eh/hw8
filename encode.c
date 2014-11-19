@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "Error: inadequate heap space.\n");
 		exit(1);
 	}
-	(*char_codes)++;
+	char_codes++;
 
 	tree *head = make_tree(1, EOF);
 
@@ -37,11 +37,10 @@ int main(int argc, char *argv[]) {
 	}
 	head=huf_encode(head);
 
-	printf("c: %s\n", search(head, 'c'));
-
 	char *tmp_code = malloc(CHSET_SIZE*sizeof(char));
 	*tmp_code = '\0';
 	print_pre(head, tmp_code);
+	free(tmp_code);
 
 	char* eof_char = get_code(EOF);
 	while(*eof_char) {
@@ -61,12 +60,13 @@ int main(int argc, char *argv[]) {
 	printf("\n%s\n", get_code(-1));
 
 	for(int i=-1; i<CHSET_SIZE; i++) {
+		get_code(i);
 		if(*(char_codes + i)) {
 			printf("Freeing %d: %s\n", i, get_code(i));
 			free(*(char_codes + i));
 		}
 	}
-	free(char_codes);
+	free(char_codes - 1);
 
 	fclose(file);
 	clean(head);
