@@ -1,11 +1,23 @@
 #include "encode.h"
 
-#define CHSET_SIZE 255
+#define CHSET_SIZE (1 << CHAR_BIT) //usually 256
 
 int output_index = 0;
 int output_value = 0;
 
+char **char_codes;
+
 int main(int argc, char *argv[]) {
+	char_codes = malloc(sizeof(char*) * (CHSET_SIZE + 1));
+	for(int i=0; i<CHSET_SIZE + 1; i++) {
+		**char_codes = '\0';
+	}
+	if(char_codes == NULL) {
+		fprintf(stderr, "Error: inadequate heap space.\n");
+		exit(1);
+	}
+	(*char_codes)++;
+
 	tree *head = make_tree(1, EOF);
 
 	FILE *file = fopen(*(argv + 1), "r");
@@ -17,7 +29,7 @@ int main(int argc, char *argv[]) {
 	for(int i=0; i<CHSET_SIZE; i++) {
 		weights[i] = 0;
 	}
-	int c; //the problem is that i'm using eof as a head
+	int c;
 	while((c=fgetc(file)) != EOF) {
 		weights[c]++;
 	}
@@ -27,44 +39,50 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	head=huf_encode(head);
-	// char code[100];
-	// print_in(head, code, 0);
-	print_pre(head);
 
-	char* eof_char = search(head, EOF);
+	printf("c: %s\n", search(head, 'c'));
+
+	char *tmp_code = malloc(CHSET_SIZE*sizeof(char));
+	*tmp_code = '\0';
+	print_pre(head, tmp_code);
+
+	char* eof_char = get_code(EOF);
 	while(*eof_char) {
 		print_bits(*(eof_char++) - '0');
 		// putchar(*eof_char);
-		eof_char++;
+		// eof_char++;
 	}
 
 	rewind(file);
 
-	print_encoded(file, head);
+	print_encoded(file);
 
-	// int total = 0;
-	// char* string;
-	// while((c=fgetc(file)) != EOF) {
-	// 	string = search(head, c);
-	// 	total += strlen(string);
-	// 	free(string);
-	// }
-	// string = search(head, c);
-	// total += strlen(string);
-	// free(string);
+	for(int i=0; i<CHAR_BIT-1; i++) {
+		print_bits(0);
+	}
 
-	// printf("Total size without encoding: %d bytes\n", head->weight*sizeof(char));
-	// printf("Total size with encoding: %d bytes\n", total/8);
+	printf("\n%s\n", get_code(-1));
 
-	// for(int i=0; i<CHAR_BIT-1; i++) {
-	// 	print_bits(0);
-	// }
+	for(int i=-1; i<CHSET_SIZE; i++) {
+		if(*(char_codes + i) != NULL) {
+			printf("Freeing %d: %s\n", i, get_code(i));
+			free(*(char_codes + i));
+		}
+	}
+	free(char_codes);
 
 	fclose(file);
 	clean(head);
+	// for(int i=0; i<math.pow(2, CHAR_BIT)-1; i++) {
+
+	// }
 }
 
-void print_pre(tree *head) {
+char* get_code(int c) {
+	return *(char_codes + c);
+}
+
+void print_pre(tree *head, char* code) {
 	if(head->left || head->right) {
 		print_bits(0);
 		// putchar('0');
@@ -77,13 +95,23 @@ void print_pre(tree *head) {
 	else {
 		// putchar('1');
 		print_bits(1);
+
 		// putchar(' ');
 		print_binary(head->c);
+		printf("Found leaf %d: %s\n", head->c, code);
+		*(char_codes + head->c) = malloc(strlen(code) + 1);
+		strcpy(*(char_codes + head->c), code);
 		// putchar(' ');
 		return;
 	}
-	print_pre(head->left);
-	print_pre(head->right);
+	int i = strlen(code);
+	printf("%s\n", code);
+	*(code + i) = '0';
+	*(code + i + 1) = '\0';
+	print_pre(head->left, code);
+	*(code + i) = '1';
+	*(code + i + 1) = '\0';
+	print_pre(head->right, code);
 }
 
 void print_binary(int c) {
@@ -94,23 +122,21 @@ void print_binary(int c) {
 }
 
 /* Print the contents of the file given a huffman encoding tree pointed to by head. Returns the index upon completion. */
-void print_encoded(FILE *file, tree *head) {
+void print_encoded(FILE *file) {
 	char *character;
 	int c;
 	int past_eof = 0;
 	while(!past_eof) {
 		c = fgetc(file);
 		past_eof = (c == EOF);
-		character = search(head, c);
-		char *origin = character;
+		// character = search(head, c);
+		character = get_code(c);
+		// char *origin = character;
 		while(*character) {
 			print_bits(*(character++) - '0');
 			// putchar(*(character++));
-			if(output_index == 0) {
-				free(origin);
-			}
-
-		}		
+		}
+		// free(origin);
 	}
 
 }
