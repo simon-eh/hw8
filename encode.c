@@ -2,6 +2,9 @@
 
 #define CHSET_SIZE 255
 
+int output_index = 0;
+int output_value = 0;
+
 int main(int argc, char *argv[]) {
 	tree *head = make_tree(1, EOF);
 
@@ -32,6 +35,11 @@ int main(int argc, char *argv[]) {
 
 	print_encoded(file, head);
 
+	char* eof_char = search(head, EOF);
+	while(*eof_char) {
+		print_bits(*(eof_char++) - '0');
+	}
+
 	// int total = 0;
 	// char* string;
 	// while((c=fgetc(file)) != EOF) {
@@ -46,7 +54,9 @@ int main(int argc, char *argv[]) {
 	// printf("Total size without encoding: %d bytes\n", head->weight*sizeof(char));
 	// printf("Total size with encoding: %d bytes\n", total/8);
 
-
+	for(int i=0; i<CHAR_BIT-1; i++) {
+		print_bits(0);
+	}
 
 	fclose(file);
 	clean(head);
@@ -54,18 +64,20 @@ int main(int argc, char *argv[]) {
 
 void print_pre(tree *head) {
 	if(head->left || head->right) {
-		putchar('0');
-		putchar(' ');
+		print_bits(0);
+		// putchar('0');
+		// putchar(' ');
 	}
 	else if(head == NULL) {
 		printf("Unexpected leaf.\n");
-		return;
+		exit(1);
 	}
 	else {
-		putchar('1');
-		putchar(' ');
+		// putchar('1');
+		print_bits(1);
+		// putchar(' ');
 		print_binary(head->c);
-		putchar(' ');
+		// putchar(' ');
 		return;
 	}
 	print_pre(head->left);
@@ -74,46 +86,42 @@ void print_pre(tree *head) {
 
 void print_binary(int c) {
 	for(int i=CHAR_BIT-1; i>=0; i--) {
-		putchar((c & (1<<i))?'1':'0');
+		print_bits((c & (1<<i))?1:0);
 	}
 }
 
+/* Print the contents of the file given a huffman encoding tree pointed to by head. Returns the index upon completion. */
 void print_encoded(FILE *file, tree *head) {
 	char *character;
 	int c;
-	int index = 0;
-	int value = 0;
 	while((c=fgetc(file)) != EOF) {
 		character = search(head, c);
+		char *origin = character;
 		for( ; *character; character++) {
-			value = print_bits(index, *character - '0', value);
-			if(index == CHAR_BIT-1) {
-				index = 0;
-			}
-			else {
-				index++;
+			print_bits(*character - '0');
+			if(output_index == 0) {
+				free(origin);
 			}
 		}
 	}
-	while(index > 0 && index < CHAR_BIT) {
-	    print_bits(index++, 0, value);
-	}
 }
 
-int print_bits(int index, int bit, int value) {
-	value = value | bit<<(CHAR_BIT - index - 1);
-	if(index == 7) {
-		printf("%c", value);
-		return 0;
-	}
-	else {
-		return value;
+void print_bits(int bit) {
+	output_value = output_value | bit<<(CHAR_BIT - output_index - 1);
+	if(output_index++ == 7) {
+		printf("%c", output_value);
+		output_value = 0;
+		output_index = 0;
 	}
 }
 
 /* Search the huffman tree for the symbol, returning its bitstring if found or an empty string if not found. Be sure to free after use. */
 char* search(tree *head, int symbol) {
 	char *code = malloc(100);
+	if(code == NULL) {
+		fprintf(stderr, "Inadequate heap space.\n");
+		exit(1);
+	}
 	*code = '\0';
 	int index = 0;
 	index = r_search(head, symbol, &code, 0);
@@ -212,13 +220,13 @@ tree* huffman_step(tree *head) {
 	}
 	old_head->next = NULL;
 	// printf("New Ordering: ");
-	// print_tree(head);
+	// print_list(head);
 	// printf("\n");
 	// printf("New head: %d, %d\n", head->c, head->weight);
 	return head;
 }
 
-void print_tree(tree* head) {
+void print_list(tree* head) {
 	while(head != NULL) {
 		// if(head->c >= 0) {
 		// 	printf("%c: %d,", head->c, head->weight);
@@ -249,7 +257,7 @@ tree* make_tree(int weight, int c) {
 /* Insert the new_node into the tree and return the new head. */
 tree* insert(tree *new_node, tree *head) {
 	// printf("Before inserting element (%d, %d) ", new_node->c, new_node->weight);
-	print_tree(head);
+	// print_list(head);
 	// int i=0;
 	tree *result = head;
 	if(new_node->weight <= head->weight) {
