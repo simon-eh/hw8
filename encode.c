@@ -9,9 +9,6 @@ char **char_codes;
 
 int main(int argc, char *argv[]) {
 	char_codes = malloc(sizeof(char*) * (CHSET_SIZE + 1));
-	for(int i=0; i<CHSET_SIZE + 1; i++) {
-		**char_codes = '\0';
-	}
 	if(char_codes == NULL) {
 		fprintf(stderr, "Error: inadequate heap space.\n");
 		exit(1);
@@ -64,7 +61,7 @@ int main(int argc, char *argv[]) {
 	printf("\n%s\n", get_code(-1));
 
 	for(int i=-1; i<CHSET_SIZE; i++) {
-		if(*(char_codes + i) != NULL) {
+		if(*(char_codes + i)) {
 			printf("Freeing %d: %s\n", i, get_code(i));
 			free(*(char_codes + i));
 		}
