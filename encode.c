@@ -31,14 +31,16 @@ int main(int argc, char *argv[]) {
 	// print_in(head, code, 0);
 	print_pre(head);
 
-	rewind(file);
-
-	print_encoded(file, head);
-
 	char* eof_char = search(head, EOF);
 	while(*eof_char) {
 		print_bits(*(eof_char++) - '0');
+		// putchar(*eof_char);
+		eof_char++;
 	}
+
+	rewind(file);
+
+	print_encoded(file, head);
 
 	// int total = 0;
 	// char* string;
@@ -54,9 +56,9 @@ int main(int argc, char *argv[]) {
 	// printf("Total size without encoding: %d bytes\n", head->weight*sizeof(char));
 	// printf("Total size with encoding: %d bytes\n", total/8);
 
-	for(int i=0; i<CHAR_BIT-1; i++) {
-		print_bits(0);
-	}
+	// for(int i=0; i<CHAR_BIT-1; i++) {
+	// 	print_bits(0);
+	// }
 
 	fclose(file);
 	clean(head);
@@ -87,6 +89,7 @@ void print_pre(tree *head) {
 void print_binary(int c) {
 	for(int i=CHAR_BIT-1; i>=0; i--) {
 		print_bits((c & (1<<i))?1:0);
+		// printf("%d", c & (1 << i)?1:0);
 	}
 }
 
@@ -94,16 +97,22 @@ void print_binary(int c) {
 void print_encoded(FILE *file, tree *head) {
 	char *character;
 	int c;
-	while((c=fgetc(file)) != EOF) {
+	int past_eof = 0;
+	while(!past_eof) {
+		c = fgetc(file);
+		past_eof = (c == EOF);
 		character = search(head, c);
 		char *origin = character;
-		for( ; *character; character++) {
-			print_bits(*character - '0');
+		while(*character) {
+			print_bits(*(character++) - '0');
+			// putchar(*(character++));
 			if(output_index == 0) {
 				free(origin);
 			}
-		}
+
+		}		
 	}
+
 }
 
 void print_bits(int bit) {
