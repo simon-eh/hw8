@@ -13,6 +13,13 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "Error: inadequate heap space.\n");
 		exit(1);
 	}
+
+	char *NULL_CHAR = malloc(sizeof(char));
+	*NULL_CHAR = '\0';
+	for(int i=0; i<CHSET_SIZE + 1; i++) {
+		*(char_codes + i) = NULL_CHAR;
+	}
+
 	char_codes++;
 
 	tree *head = make_tree(1, EOF);
@@ -57,13 +64,14 @@ int main(int argc, char *argv[]) {
 		print_bits(0);
 	}
 
-	printf("\n%s\n", get_code(-1));
+	// printf("\n%s\n", get_code(-1));
+
+	// printf("\n");
 
 	for(int i=-1; i<CHSET_SIZE; i++) {
-		get_code(i);
-		if(*(char_codes + i)) {
-			printf("Freeing %d: %s\n", i, get_code(i));
-			free(*(char_codes + i));
+		if(*get_code(i)) {
+			// printf("Freeing %d: %s\n", i, get_code(i));
+			free(get_code(i));
 		}
 	}
 	free(char_codes - 1);
@@ -95,14 +103,14 @@ void print_pre(tree *head, char* code) {
 
 		// putchar(' ');
 		print_binary(head->c);
-		printf("Found leaf %d: %s\n", head->c, code);
+		// printf("Found leaf %d: %s\n", head->c, code);
 		*(char_codes + head->c) = malloc(strlen(code) + 1);
 		strcpy(*(char_codes + head->c), code);
 		// putchar(' ');
 		return;
 	}
 	int i = strlen(code);
-	printf("%s\n", code);
+	// printf("%s\n", code);
 	*(code + i) = '0';
 	*(code + i + 1) = '\0';
 	print_pre(head->left, code);
@@ -191,40 +199,6 @@ tree* huf_encode(tree *head) {
 	return head;
 }
 
-/* Recursively frees the tree-list whos first node is pointed to by head. */
-void clean(tree *head) {
-	if(head->left != NULL) {
-		clean(head->left);
-	}
-	if(head->right != NULL) {
-		clean(head->right);
-	}
-	if(head->next != NULL) {
-		clean(head->next);
-	}
-	free(head);
-}
-
-void print_in(tree *head, char code[], int index) {
-	if(head->left) {
-		code[index] = '0';
-		print_in(head->left, code, index+1);
-	}
-	if(head->right) {
-		code[index] = '1';
-		print_in(head->right, code, index+1);
-	}
-	if(!head->right && !head->left) {
-		code[index]='\0';
-		if(head->c >= 0 && head->c < 128) {
-			printf("%c: %s\n", head->c, code);
-		}
-		else {
-			printf("%d: %s\n", head->c, code);
-		}
-	}
-}
-
 /* Performs one step of the huffman tree creation on the sorted list whose first node is pointed to by head. */
 tree* huffman_step(tree *head) {
 	tree *new_node = head;
@@ -269,21 +243,6 @@ void print_list(tree* head) {
 		head = head->next;
 	}
 	printf("\n");
-}
-
-/* Intialize a singleton node for specified character and weight (frequency). */
-tree* make_tree(int weight, int c) {
-	tree *result = malloc(sizeof(tree));
-	if(result == NULL) {
-		fprintf(stderr, "Error: inadequate heap space.\n");
-		exit(1);
-	}
-	result->c = c;
-	result->weight = weight;
-	result->next = NULL;
-	result->left = NULL;
-	result->right = NULL;
-	return result;
 }
 
 /* Insert the new_node into the tree and return the new head. */
