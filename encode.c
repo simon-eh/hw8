@@ -103,7 +103,7 @@ void print_pre(tree *head, char* code) {
 
 		// putchar(' ');
 		print_binary(head->c);
-		// printf("Found leaf %d: %s\n", head->c, code);
+		// printf("Found leaf %c: %s\n", head->c, code);
 		*(char_codes + head->c) = malloc(strlen(code) + 1);
 		strcpy(*(char_codes + head->c), code);
 		// putchar(' ');
