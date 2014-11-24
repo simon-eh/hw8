@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
 	fix_eof(file, head);
 
 	tree *tmp;
-	while((tmp=get_char(file, head)) && !at_eof) {
+	while((tmp=get_char(file, head))->c != EOF) {
 		putchar(tmp->c);
 	}
 }
@@ -43,27 +43,20 @@ tree* get_char(FILE *file, tree *head) {
 
 void read_tree(FILE *file, tree *head) {
 	int bit = get_bit(file);
-	// putchar(' ');
-	if(bit == -1) {
-		fprintf(stderr, "Unexpected EOF while reading tree.\n");
-		return NULL;
+	if(bit == 0) {
+		head->left = make_tree(0,0);
+		head->right = make_tree(0,0);
+		read_tree(file, head->left);
+		read_tree(file, head->right);
 	}
-	else {
-		if(bit == 0) {
-			head->left = make_tree(0,0);
-			head->right = make_tree(0,0);
-			read_tree(file, head->left);
-			read_tree(file, head->right);
+	else if(bit == 1) {
+		int character = 0;
+		for(int i=CHAR_BIT-1; i>=0; i--) {
+			character = character | (get_bit(file) << i);
 		}
-		else if(bit == 1) {
-			int character = 0;
-			for(int i=CHAR_BIT-1; i>=0; i--) {
-				character = character | (get_bit(file) << i);
-			}
-			putchar(' ');
-			printf("Found character %d\n", character);
-			head->c = character;
-		}
+		putchar(' ');
+		printf("Found character %d\n", character);
+		head->c = character;
 	}
 }
 
