@@ -1,6 +1,6 @@
 #include "decode.h"
 
-int input_index = CHAR_BIT-1;
+int input_index = -1;
 int input_char = 0;
 
 int at_eof = 0;
@@ -16,18 +16,46 @@ int main(int argc, char *argv[]) {
 
 	fix_eof(file, head);
 
+	char *code = malloc(sizeof(char) * 100);
+	*code = '\0';
+	print_pre(head, code);
+
 	tree *tmp;
 	while((tmp=get_char(file, head))->c != EOF && !at_eof) {
 		putchar(tmp->c);
 	}
-	printf("Last char: %d\n", tmp->c);
+	// printf("At eof: %d\n", at_eof);
+	// printf("Last char: %d\n", tmp->c);
 	fclose(file);
 	clean(head);
 }
 
 void fix_eof(FILE *file, tree *head) {
 	tree *character = get_char(file, head);
+	// printf("Found EOF, character %d\n", character->c);
 	character->c = EOF;
+}
+
+void print_pre(tree *head, char* code) {
+	if(head->left || head->right) {
+	}
+	else if(head == NULL) {
+		printf("Unexpected leaf.\n");
+		exit(1);
+	}
+	else {
+		// printf("Found leaf %c: %s\n", head->c, code);
+		// putchar(' ');
+		return;
+	}
+	int i = strlen(code);
+	// printf("%s\n", code);
+	*(code + i) = '0';
+	*(code + i + 1) = '\0';
+	print_pre(head->left, code);
+	*(code + i) = '1';
+	*(code + i + 1) = '\0';
+	print_pre(head->right, code);
 }
 
 /* Read in the next character from file and return the node associated with it. */
@@ -46,8 +74,9 @@ tree* get_char(FILE *file, tree *head) {
 
 void read_tree(FILE *file, tree *head) {
 	int bit = get_bit(file);
+	// putchar(' ');
 	if(bit == 0) {
-		
+
 		head->left = make_tree(0,0);
 		head->right = make_tree(0,0);
 		read_tree(file, head->left);
@@ -65,17 +94,20 @@ void read_tree(FILE *file, tree *head) {
 }
 
 int get_bit(FILE *file) {
-	if(!input_char) {
+	if(input_index == -1) {
 		input_char = fgetc(file);
+		input_index = CHAR_BIT-1;
 	}
 	if(input_char == EOF) {
+		printf("Hit eof.\n");
 		return -1;
 	}
 	int result = !!((1 << input_index--) & input_char);
-	if(input_index == -1) {
-		input_index = CHAR_BIT - 1;
-		input_char = '\0';
-	}
+	// if(input_index == -1) {
+	// 	input_index = CHAR_BIT - 1;
+	// 	input_char = '\0';
+	// }
 	// printf("%d", result);
+	assert((result==0) || (result == 1));
 	return result;
 }
