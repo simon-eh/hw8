@@ -1,0 +1,17 @@
+1. Simon Ever-Hale
+2. encode - Read a file CHAR_BIT bits at a time, build a Huffman tree based on the frequency of each character read. Reread the file and print the Huffman code for each character.
+decode - Decode a file encoded by a Huffman tree by first reading in a preorder representation of the tree, and then using that tree to decode each code read after.
+3. encode.c - contains all methods specific to encoding.
+encode.h - contains prototypes for all methods in encode.c
+decode.c - contains all methods specific to decoding.
+decode.h - contians prototypes for all methods in decode.c
+huffman.c - contains all methods used by both encode.c and decode.c
+huffman.h - contains prototypes for all methods in huffman.c as well as the Huffman tree struct
+Makefile - contains compilation instructions for encode and decode as well as for removing executables
+4. No known bugs.
+5. 15 hours total.
+6. As far as I can tell, none of my design choices are particularly out of the ordinary or unique.
+7. No valgrind warnings under any circumstances that I could find - including invalid files or no file specified as arguments.
+
+I have adhered to the honor code in this assignment.
+Simon Ever-Hale

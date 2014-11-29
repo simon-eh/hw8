@@ -1,5 +1,12 @@
 #include "encode.h"
 
+/**
+ * Simon Ever-Hale
+ * 11/29/2014
+ * CSCI 241/Kuperman
+ * ENCODE.C - A program to losslessly compress  files using a Huffman tree.
+ */
+
 #define CHSET_SIZE (1 << CHAR_BIT) //usually 256
 
 int output_index = 0;
@@ -7,17 +14,21 @@ int output_value = 0;
 
 char **char_codes;
 
+/* The main function where the file to encode is read in, the tree is constructed, and the encoded file is printed. */
 int main(int argc, char *argv[]) {
+	if(argc == 1) {
+	    fprintf(stderr, "Please specify a file to encode.\n");
+	    return 1;
+	}
 	char_codes = malloc(sizeof(char*) * (CHSET_SIZE + 1));
 	if(char_codes == NULL) {
 		fprintf(stderr, "Error: inadequate heap space.\n");
-		exit(1);
+		return 1;
 	}
 
-	char *NULL_CHAR = malloc(sizeof(char));
-	*NULL_CHAR = '\0';
+	char NULL_CHAR = '\0';
 	for(int i=0; i<CHSET_SIZE + 1; i++) {
-		*(char_codes + i) = NULL_CHAR;
+		*(char_codes + i) = &NULL_CHAR;
 	}
 
 	char_codes++;
@@ -27,6 +38,13 @@ int main(int argc, char *argv[]) {
 	FILE *file = fopen(*(argv + 1), "r");
 	if(file == NULL) {
 		printf("Error: %s\n", strerror(errno));
+		free(head);
+		for(int i=-1; i<CHSET_SIZE; i++) {
+			if(*get_code(i)) {
+				free(get_code(i));
+			}
+		}
+		free(char_codes - 1);
 		return 1;
 	}
 	int weights[CHSET_SIZE];
@@ -83,10 +101,12 @@ int main(int argc, char *argv[]) {
 	// }
 }
 
+/* Gets the binary code for the character c. */
 char* get_code(int c) {
 	return *(char_codes + c);
 }
 
+/* Prints all binary codes in the tree by preorder traversal. */
 void print_pre(tree *head, char* code) {
 	if(head->left || head->right) {
 		print_bits(0);
@@ -119,6 +139,7 @@ void print_pre(tree *head, char* code) {
 	print_pre(head->right, code);
 }
 
+/* Add the CHAR_BIT-sized binary representation of the character c to the output buffer (not its Huffman tree */
 void print_binary(int c) {
 	for(int i=CHAR_BIT-1; i>=0; i--) {
 		print_bits((c & (1<<i))?1:0);
@@ -145,7 +166,7 @@ void print_encoded(FILE *file) {
 	}
 
 }
-
+/* Print add the bit to the output buffer. If the buffer is full (CHAR_BIT size) then print the character. */
 void print_bits(int bit) {
 	output_value = output_value | bit<<(CHAR_BIT - output_index - 1);
 	if(output_index++ == 7) {
@@ -169,6 +190,7 @@ char* search(tree *head, int symbol) {
 	return code;
 }
 
+/* Recursive helper function for searching the tree. */
 int r_search(tree *head, int symbol, char** code, int index) {
 	if(head->c == symbol) {
 		return index;
@@ -232,6 +254,7 @@ tree* huffman_step(tree *head) {
 	return head;
 }
 
+/* For debugging purposes only Prints only the next of each node, not its left or right children. */
 void print_list(tree* head) {
 	while(head != NULL) {
 		// if(head->c >= 0) {

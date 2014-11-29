@@ -1,5 +1,12 @@
 #include "encode.h"
 
+/**
+ * Simon Ever-Hale
+ * 11/29/2014
+ * CSCI 241/Kuperman
+ * HUFFMAN.C - Contains all functions and structs used by BOTH encode and decode.
+ */
+
 /* Recursively frees the tree-list whos first node is pointed to by head. */
 void clean(tree *head) {
 	if(head->left != NULL) {
@@ -29,6 +36,7 @@ tree* make_tree(int weight, int c) {
 	return result;
 }
 
+/* Print all codes in the tree using an inorder traversal. */
 void print_in(tree *head, char code[], int index) {
 	if(head->left) {
 		code[index] = '0';
